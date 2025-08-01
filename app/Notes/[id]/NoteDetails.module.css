@@ -1,0 +1,38 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.item {
+  background: #ffffff;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.content {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+
+.date {
+  color: #999;
+  font-size: 0.875rem;
+  margin: 0;
+  font-style: italic;
+}

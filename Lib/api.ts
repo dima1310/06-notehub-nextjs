@@ -53,3 +53,9 @@ export const notesApi = {
     await api.delete(`/notes/${id}`);
   },
 };
+
+// Додаткові функції для сумісності з іншими компонентами
+export const fetchNotes = notesApi.getNotes;
+export const fetchNoteById = notesApi.getNoteById;
+export const createNote = notesApi.createNote;
+export const deleteNote = notesApi.deleteNote;
