@@ -17,17 +17,14 @@ export default async function NoteDetailsPage({
 }: NoteDetailsPageProps) {
   const noteId = params.id;
 
-  // Створюємо новий QueryClient для серверного рендерингу
   const queryClient = new QueryClient();
 
   try {
-    // Prefetch даних на сервері
     await queryClient.prefetchQuery({
       queryKey: ["note", noteId],
       queryFn: () => fetchNoteById(noteId),
     });
   } catch (error) {
-    // Якщо помилка при prefetch, продовжуємо рендер
     console.error("Failed to prefetch note:", error);
   }
 

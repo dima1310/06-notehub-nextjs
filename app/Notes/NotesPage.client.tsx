@@ -14,25 +14,28 @@ import Pagination from "@/components/Pagination/Pagination";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Modal from "@/components/NoteModal/NoteModal";
 import NoteForm from "@/components/NoteForm/NoteForm";
-import Loader from "@/components/Loader/Loader";
-import css from "./App.module.css";
+import css from "./NotesPage.module.css";
 
-const App: React.FC = () => {
+export const NotesPageClient: React.FC = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const [debouncedSearch] = useDebounce(search, 300);
+  const [debouncedSearch] = useDebounce(search, 500);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["notes", page, debouncedSearch],
-    queryFn: () =>
-      notesApi.getNotes({
+    queryFn: async () => {
+      console.log("Fetching notes:", { page, search: debouncedSearch });
+      const result = await notesApi.getNotes({
         page: page,
         perPage: 12,
         search: debouncedSearch,
-      }),
+      });
+      console.log("Notes fetched:", result);
+      return result;
+    },
     placeholderData: keepPreviousData,
   });
 
@@ -65,6 +68,26 @@ const App: React.FC = () => {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  if (isLoading) {
+    return (
+      <div className={css.app}>
+        <p>Loading, please wait...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Query error:", error);
+    return (
+      <div className={css.app}>
+        <div className={css.error}>
+          Error:{" "}
+          {error instanceof Error ? error.message : "Something went wrong"}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
@@ -73,15 +96,6 @@ const App: React.FC = () => {
           Create note +
         </button>
       </header>
-
-      {isLoading && <Loader />}
-
-      {error && (
-        <div className={css.error}>
-          Error:{" "}
-          {error instanceof Error ? error.message : "Something went wrong"}
-        </div>
-      )}
 
       {data && data.notes && data.notes.length > 0 ? (
         <>
@@ -95,7 +109,7 @@ const App: React.FC = () => {
           )}
         </>
       ) : (
-        !isLoading && <div className={css.noNotes}>No notes found</div>
+        <div className={css.noNotes}>No notes found</div>
       )}
 
       {isModalOpen && (
@@ -106,5 +120,3 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-export default App;
