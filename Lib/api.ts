@@ -33,7 +33,7 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error("Response error:", error.response?.status, error.message);
+    console.error("Response error:", error. response?.status, error.message);
     console.error("Error config:", error.config);
     return Promise.reject(error);
   }
