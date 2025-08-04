@@ -3,6 +3,7 @@ import type { Note } from "@/types/note";
 
 interface NoteDetailsPageProps {
   params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 export default async function NoteDetailsPage({
