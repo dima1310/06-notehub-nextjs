@@ -24,6 +24,7 @@ export default async function NoteDetailsPage({
       queryFn: () => fetchNoteById(id),
     });
   } catch (error) {
+    console.error("Помилка:", error);
     throw new Error("Failed to fetch note details");
   }
 
