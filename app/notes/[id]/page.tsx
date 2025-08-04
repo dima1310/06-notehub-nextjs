@@ -2,7 +2,7 @@ import { fetchNoteById } from "@/lib/api";
 import type { Note } from "@/types/note";
 
 interface NoteDetailsPageProps {
-  params: { id: number | string };
+  params: { id: number };
 }
 
 export default async function NoteDetailsPage({
