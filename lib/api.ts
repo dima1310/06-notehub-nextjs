@@ -21,34 +21,61 @@ export const fetchNotes = async (
   search = "",
   limit = 12
 ): Promise<NotesResponse> => {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-    ...(search && { search }),
-  });
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+    });
 
-  const response = await api.get(`/notes?${params}`);
-  return response.data;
+    console.log(`Fetching notes: ${API_BASE_URL}/notes?${params}`);
+
+    const response = await api.get(`/notes?${params}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching notes:", error);
+    throw error;
+  }
 };
 
 export const fetchNoteById = async (id: number): Promise<Note> => {
-  const response = await api.get(`/notes/${id}`);
-  return response.data;
+  try {
+    const response = await api.get(`/notes/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching note ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createNote = async (noteData: CreateNoteData): Promise<Note> => {
-  const response = await api.post("/notes", noteData);
-  return response.data;
+  try {
+    const response = await api.post("/notes", noteData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating note:", error);
+    throw error;
+  }
 };
 
 export const updateNote = async (
   id: number,
   noteData: UpdateNoteData
 ): Promise<Note> => {
-  const response = await api.put(`/notes/${id}`, noteData);
-  return response.data;
+  try {
+    const response = await api.put(`/notes/${id}`, noteData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating note ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteNote = async (id: number): Promise<void> => {
-  await api.delete(`/notes/${id}`);
+  try {
+    await api.delete(`/notes/${id}`);
+  } catch (error) {
+    console.error(`Error deleting note ${id}:`, error);
+    throw error;
+  }
 };
