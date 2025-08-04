@@ -1,12 +1,16 @@
-type NoteDetailsPageProps = {
-  params: { id: string };
-};
+interface PageProps {
+  params: {
+    id: string;
+  };
+}
 
-export default function NoteDetailsPage({ params }: NoteDetailsPageProps) {
+export default async function NoteDetailsPage({ params }: PageProps) {
+  const { id } = params;
+
   return (
     <div>
       <h1>Note Details Page</h1>
-      <p>Note ID: {params.id}</p>
+      <p>Note ID: {id}</p>
     </div>
   );
 }
