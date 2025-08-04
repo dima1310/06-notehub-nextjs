@@ -38,9 +38,7 @@ export default async function NoteDetailsPage({
       </div>
       {note.createdAt && (
         <div className="note-meta">
-          <small>
-            Створено: {new Date(note.createdAt).toLocaleDateString("uk-UA")}
-          </small>
+          <small>{new Date(note.createdAt).toLocaleDateString("uk-UA")}</small>
         </div>
       )}
     </div>
