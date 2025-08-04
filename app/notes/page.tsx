@@ -1,17 +1,20 @@
+// app/notes/page.tsx
 import { fetchNotes } from "@/lib/api";
 import NotesClient from "@/app/notes/Notes.client";
 import type { NotesResponse } from "@/types/note";
 
 interface NotesPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     search?: string;
-  };
+  }>;
 }
 
 export default async function NotesPage({ searchParams }: NotesPageProps) {
-  const currentPage = Number(searchParams.page) || 1;
-  const searchQuery = searchParams.search || "";
+  // Await searchParams в Next.js 15
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
+  const searchQuery = params.search || "";
 
   let initialData: NotesResponse;
 
