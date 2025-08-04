@@ -20,14 +20,17 @@ export default function NoteDetailsClient() {
     enabled: !isNaN(id),
   });
 
+  // Обработка состояния загрузки
   if (isLoading) {
     return <p>Loading, please wait...</p>;
   }
 
+  // Обработка ошибки или отсутствия данных
   if (error || !note) {
     return <p>Something went wrong.</p>;
   }
 
+  // Рендер деталей нотатки согласно заданию
   return (
     <div className={css.container}>
       <div className={css.item}>

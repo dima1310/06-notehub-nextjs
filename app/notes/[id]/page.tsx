@@ -1,32 +1,35 @@
 import { fetchNoteById } from "@/lib/api";
-import type { Note } from "@/types/note";
+import {
+  QueryClient,
+  dehydrate,
+  HydrationBoundary,
+} from "@tanstack/react-query";
+import NoteDetailsClient from "./NoteDetails.client";
 
 interface NoteDetailsPageProps {
-  params: { id: number };
+  params: {
+    id: string;
+  };
 }
 
 export default async function NoteDetailsPage({
   params,
 }: NoteDetailsPageProps) {
-  const { id } = params;
-
-  let note: Note | null = null;
+  const id = Number(params.id);
+  const queryClient = new QueryClient();
 
   try {
-    note = await fetchNoteById(Number(id));
-  } catch (error) {
-    console.error("Failed to fetch note:", error);
-    return <div>Помилка завантаження нотатки</div>;
-  }
-
-  if (!note) {
-    return <div>Нотатку не знайдено</div>;
+    await queryClient.prefetchQuery({
+      queryKey: ["note", id],
+      queryFn: () => fetchNoteById(id),
+    });
+  } catch {
+    throw new Error("Failed to fetch note details");
   }
 
   return (
-    <div>
-      <h1>{note.title}</h1>
-      <p>{note.content}</p>
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NoteDetailsClient />
+    </HydrationBoundary>
   );
 }
