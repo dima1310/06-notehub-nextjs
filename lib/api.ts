@@ -9,10 +9,16 @@ import type {
 const API_BASE_URL = "https://notehub-public.goit.study/api";
 const TOKEN = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
 
+console.log("API Configuration:");
+console.log("API_BASE_URL:", API_BASE_URL);
+console.log("TOKEN exists:", !!TOKEN);
+console.log("TOKEN length:", TOKEN?.length || 0);
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     Authorization: `Bearer ${TOKEN}`,
+    "Content-Type": "application/json",
   },
 });
 
@@ -22,15 +28,23 @@ export const fetchNotes = async (
   limit = 12
 ): Promise<NotesResponse> => {
   try {
-    const params = new URLSearchParams({
+    // Створюємо параметри як об'єкт для axios
+    const params: Record<string, string | number> = {
       page: page.toString(),
       limit: limit.toString(),
-      ...(search && { search }),
-    });
+    };
 
-    console.log(`Fetching notes: ${API_BASE_URL}/notes?${params}`);
+    // Додаємо search тільки якщо він не пустий
+    if (search && search.trim() !== "") {
+      params.search = search.trim();
+    }
 
-    const response = await api.get(`/notes?${params}`);
+    console.log(`Fetching notes from: ${API_BASE_URL}/notes`);
+    console.log("Request params:", params);
+
+    const response = await api.get("/notes", { params });
+
+    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching notes:", error);

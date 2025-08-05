@@ -1,43 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { fetchNotes } from "@/lib/api";
 import type { Note, NotesResponse } from "@/types/note";
+import NoteList from "@/components/NoteList/NoteList";
 
 interface NotesClientProps {
-  initialPage: number;
-  initialSearch: string;
   initialData: NotesResponse;
 }
 
-export default function NotesClient({
-  initialPage,
-  initialSearch,
-  initialData,
-}: NotesClientProps) {
+export default function NotesClient({ initialData }: NotesClientProps) {
   const [notes, setNotes] = useState<Note[]>(initialData.notes || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [currentPage, setCurrentPage] = useState(initialData.currentPage || 1);
   const [totalPages, setTotalPages] = useState(initialData.totalPages || 1);
 
   const searchParams = useSearchParams();
-  const query = searchParams.get("search") || initialSearch;
+  const router = useRouter();
+  const query = searchParams.get("search") || "";
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
 
-  useEffect(() => {
-    // Если поисковый запрос изменился с начального, загружаем новые данные
-    if (query !== initialSearch) {
-      loadNotes(1, query);
-    }
-  }, [query, initialSearch]);
+  console.log("=== NotesClient State ===");
+  console.log("Notes count:", notes.length);
+  console.log("Loading:", loading);
+  console.log("Error:", error);
+  console.log("Current page:", currentPage);
+  console.log("Total pages:", totalPages);
+  console.log("URL params - query:", query, "page:", pageParam);
 
-  async function loadNotes(page: number, searchQuery: string) {
+  // Мемоізуємо функцію loadNotes щоб уникнути ререндерів
+  const loadNotes = useCallback(async (page: number, searchQuery: string) => {
+    console.log("=== loadNotes called ===");
+    console.log("Page:", page, "Search:", searchQuery);
+
     try {
       setLoading(true);
       setError(null);
 
       const response: NotesResponse = await fetchNotes(page, searchQuery, 12);
+
+      console.log("=== Notes loaded ===");
+      console.log("Response:", response);
 
       setNotes(response.notes || []);
       setCurrentPage(response.currentPage || page);
@@ -49,16 +54,67 @@ export default function NotesClient({
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    console.log("=== NotesClient useEffect ===");
+    console.log("Current URL query:", query, "page:", pageParam);
+    console.log("Current state page:", currentPage);
+
+    // Перевіряємо чи URL параметри відрізняються від поточного стану
+    const pageChanged = pageParam !== currentPage;
+    const searchChanged = query !== ""; // Якщо є пошук, завжди завантажуємо
+
+    // Якщо це перший рендер з initialData і URL збігається з серверними даними
+    const isFirstRenderWithMatchingParams =
+      currentPage === (initialData.currentPage || 1) &&
+      query === "" &&
+      pageParam === (initialData.currentPage || 1);
+
+    if (isFirstRenderWithMatchingParams) {
+      console.log("First render with matching params - using initial data");
+      return;
+    }
+
+    if (pageChanged || searchChanged) {
+      console.log("Loading notes due to params change:", {
+        pageChanged,
+        searchChanged,
+        pageParam,
+        query,
+      });
+      loadNotes(pageParam, query);
+    }
+  }, [query, pageParam, currentPage, loadNotes, initialData.currentPage]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
-      loadNotes(newPage, query);
+      console.log("Page change to:", newPage);
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", newPage.toString());
+      if (query) {
+        params.set("search", query);
+      } else {
+        params.delete("search");
+      }
+
+      router.push(`/notes?${params.toString()}`);
     }
   };
 
+  const handleDeleteNote = (id: number) => {
+    console.log("Delete note:", id);
+    // TODO: Implement delete functionality
+    setNotes(notes.filter((note) => note.id !== id));
+  };
+
   if (loading) {
-    return <div>Завантаження...</div>;
+    return (
+      <div className="loading">
+        <p>Завантаження...</p>
+      </div>
+    );
   }
 
   if (error) {
@@ -73,26 +129,44 @@ export default function NotesClient({
   }
 
   if (notes.length === 0) {
-    return <div>Нотатки не знайдені</div>;
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <h3>Нотатки не знайдені</h3>
+        <p>Спробуйте змінити пошуковий запит або створити нову нотатку</p>
+      </div>
+    );
   }
 
   return (
     <div>
-      <ul>
-        {notes.map((note) => (
-          <li key={note.id}>
-            <h2>{note.title}</h2>
-            <p>{note.content}</p>
-          </li>
-        ))}
-      </ul>
+      <div style={{ marginBottom: "1rem" }}>
+        <p>Знайдено нотаток: {notes.length}</p>
+        {query && <p>Пошук за запитом: {query}</p>}
+      </div>
 
-      {/* Пагинация */}
+      <NoteList notes={notes} onDelete={handleDeleteNote} />
+
+      {/* Пагінація */}
       {totalPages > 1 && (
-        <div className="pagination">
+        <div
+          className="pagination"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            marginTop: "2rem",
+            justifyContent: "center",
+          }}
+        >
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage <= 1}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #ccc",
+              background: currentPage <= 1 ? "#f5f5f5" : "white",
+              cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+            }}
           >
             Попередня
           </button>
@@ -104,6 +178,12 @@ export default function NotesClient({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage >= totalPages}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #ccc",
+              background: currentPage >= totalPages ? "#f5f5f5" : "white",
+              cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+            }}
           >
             Наступна
           </button>
