@@ -7,6 +7,16 @@ import { type NoteTag } from "@/types/note";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
+  initialData?: {
+    title: string;
+    content: string;
+    tag: NoteTag;
+  };
+  submitButtonText?: string;
+  error?: string;
+  isLoading: boolean;
+  onCancel: () => void;
+  onSubmit: (data: { title: string; content: string; tag: NoteTag }) => void;
   onClose: () => void;
 }
 

@@ -1,6 +1,7 @@
-import { fetchNotes } from "@/lib/api";
-import NotesClient from "@/app/notes/Notes.client";
-import type { NotesResponse } from "@/types/note";
+import NotesClient from "./Notes.client";
+import { fetchNotes, type NotesResponse } from "@/lib/api";
+
+export const dynamic = "force-dynamic";
 
 interface NotesPageProps {
   searchParams: Promise<{
@@ -38,7 +39,6 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
         <h1>Мої нотатки</h1>
       </div>
 
-      {/* Передаємо тільки initialData згідно з інтерфейсом NotesClient */}
       <NotesClient initialData={initialData} />
     </div>
   );

@@ -1,6 +1,11 @@
+import {
+  QueryClient,
+  dehydrate,
+  HydrationBoundary,
+} from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api";
 import { notFound } from "next/navigation";
-import type { Note } from "@/types/note";
+import NoteDetailsClient from "./NoteDetails.client";
 
 interface NoteDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -11,36 +16,30 @@ export default async function NoteDetailsPage({
 }: NoteDetailsPageProps) {
   const { id } = await params;
 
-  const noteId = parseInt(id, 10);
-
-  if (isNaN(noteId)) {
+  // id це вже string, не потрібно конвертувати в число
+  if (!id || id.trim() === "") {
     notFound();
   }
 
-  let note: Note;
+  const queryClient = new QueryClient();
 
   try {
-    note = await fetchNoteById(noteId);
+    // Prefetch даних на сервері для гідратації на клієнті
+    await queryClient.prefetchQuery({
+      queryKey: ["note", id],
+      queryFn: () => fetchNoteById(id),
+      staleTime: 5 * 60 * 1000, // 5 хвилин
+    });
   } catch (error) {
-    console.error("Error fetching note:", error);
+    console.error("Error prefetching note:", error);
     notFound();
   }
 
-  if (!note) {
-    notFound();
-  }
+  const dehydratedState = dehydrate(queryClient);
 
   return (
-    <div className="note-details">
-      <h1>{note.title}</h1>
-      <div className="note-content">
-        <p>{note.content}</p>
-      </div>
-      {note.createdAt && (
-        <div className="note-meta">
-          <small>{new Date(note.createdAt).toLocaleDateString("uk-UA")}</small>
-        </div>
-      )}
-    </div>
+    <HydrationBoundary state={dehydratedState}>
+      <NoteDetailsClient noteId={id} />
+    </HydrationBoundary>
   );
 }
