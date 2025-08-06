@@ -17,7 +17,6 @@ export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Використовуємо TanStack Query для отримання даних
   const {
     data: note,
     isLoading,

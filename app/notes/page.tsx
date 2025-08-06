@@ -1,6 +1,5 @@
 import NotesClient from "./Notes.client";
 import { fetchNotes, type NotesResponse } from "@/lib/api";
-
 export const dynamic = "force-dynamic";
 
 interface NotesPageProps {

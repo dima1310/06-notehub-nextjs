@@ -41,7 +41,7 @@ export const fetchNotes = async (
     // Створюємо параметри
     const params: Record<string, string | number> = {
       page: page.toString(),
-      limit: limit.toString(),
+      perPage: limit.toString(),
     };
 
     // Додаємо search тільки якщо він не пустий
