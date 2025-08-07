@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
 import { deleteNote } from "@/lib/api";
 import type { Note } from "@/types/note";
 import type { NotesResponse } from "@/lib/api";
 import NoteList from "@/components/NoteList/NoteList";
 import Modal from "@/components/Modal/Modal";
 import NoteForm from "@/components/NoteForm/NoteForm";
+import Pagination from "@/components/Pagination/Pagination";
 import css from "./NotesPage.module.css";
 
 interface NotesClientProps {
@@ -15,10 +17,16 @@ interface NotesClientProps {
 }
 
 export default function NotesClient({ initialData }: NotesClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [notes, setNotes] = useState<Note[]>(initialData.notes || []);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || ""
+  );
+  const [currentPage] = useState(initialData.currentPage || 1);
+  const [totalPages] = useState(initialData.totalPages || 1);
 
   const deleteMutation = useMutation({
     mutationFn: deleteNote,
@@ -32,6 +40,30 @@ export default function NotesClient({ initialData }: NotesClientProps) {
     },
   });
 
+  const handlePageChange = (selectedItem: { selected: number }) => {
+    const newPage = selectedItem.selected + 1;
+    const params = new URLSearchParams();
+
+    if (searchTerm) {
+      params.set("search", searchTerm);
+    }
+    params.set("page", newPage.toString());
+
+    router.push(`/notes?${params.toString()}`);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    const params = new URLSearchParams();
+
+    if (value) {
+      params.set("search", value);
+    }
+    params.set("page", "1"); // Сброс на первую страницу при поиске
+
+    router.push(`/notes?${params.toString()}`);
+  };
+
   const filteredNotes = notes.filter((note) =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -43,7 +75,7 @@ export default function NotesClient({ initialData }: NotesClientProps) {
           type="text"
           placeholder="Пошук..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className={css.searchInput}
         />
         <button onClick={() => setIsModalOpen(true)} className={css.button}>
@@ -54,11 +86,21 @@ export default function NotesClient({ initialData }: NotesClientProps) {
       {filteredNotes.length === 0 ? (
         <p>Немає нотаток</p>
       ) : (
-        <NoteList
-          notes={filteredNotes}
-          onDelete={(id) => deleteMutation.mutate(id)}
-          isDeleting={deleteMutation.isPending}
-        />
+        <>
+          <NoteList
+            notes={filteredNotes}
+            onDelete={(id) => deleteMutation.mutate(id)}
+            isDeleting={deleteMutation.isPending}
+          />
+
+          {totalPages > 1 && (
+            <Pagination
+              pageCount={totalPages}
+              currentPage={currentPage - 1} // react-paginate использует 0-based индексы
+              onPageChange={handlePageChange}
+            />
+          )}
+        </>
       )}
 
       {isModalOpen && (

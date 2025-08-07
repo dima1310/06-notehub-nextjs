@@ -18,8 +18,10 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
   let initialData: NotesResponse;
 
   try {
+    // Увеличиваем лимит до 12 заметок на страницу
     initialData = await fetchNotes(currentPage, searchQuery, 12);
   } catch (error) {
+    console.error("Failed to fetch notes:", error);
     initialData = {
       notes: [],
       totalPages: 1,
