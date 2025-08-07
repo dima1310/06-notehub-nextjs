@@ -73,6 +73,8 @@ export default function NotesClient({ initialData }: NotesClientProps) {
             onClose={() => setIsModalOpen(false)}
             onSubmit={(newNote) => {
               const tempId = Date.now().toString();
+              const now = new Date().toISOString();
+
               setNotes((prev) => [
                 ...prev,
                 {
@@ -80,12 +82,22 @@ export default function NotesClient({ initialData }: NotesClientProps) {
                   title: newNote.title,
                   content: newNote.content,
                   tag: newNote.tag,
-                  category: "General", // если есть такое поле
-                },
+                  createdAt: now,
+                  updatedAt: now,
+                } as Note,
               ]);
+
+              setIsModalOpen(false);
             }}
           />
         </Modal>
+      )}
+
+      {error && (
+        <div className={css.error}>
+          {error}
+          <button onClick={() => setError(null)}>✕</button>
+        </div>
       )}
     </div>
   );
