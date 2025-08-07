@@ -1,6 +1,7 @@
+import Image from "next/image";
 import css from "./Home.module.css";
 
-export default function HomePage() {
+export default function Home() {
   return (
     <main>
       <div className={css.container}>

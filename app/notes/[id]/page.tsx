@@ -1,44 +1,32 @@
 import {
+  HydrationBoundary,
   QueryClient,
   dehydrate,
-  HydrationBoundary,
 } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api";
-import { notFound } from "next/navigation";
-import NoteDetailsClient from "./NoteDetails.client";
-
-interface NoteDetailsPageProps {
-  params: Promise<{ id: string }>;
-}
+import NoteDetailsClient from "./NoteDetailsClient";
 
 export default async function NoteDetailsPage({
   params,
-}: NoteDetailsPageProps) {
-  const { id } = await params;
+}: {
+  params: { id: string };
+}) {
+  const id = params.id; // не Number, просто строка
 
-  // id це вже string, не потрібно конвертувати в число
-  if (!id || id.trim() === "") {
-    notFound();
+  // Проверка id (если нужно)
+  if (!id || typeof id !== "string") {
+    throw new Error("Invalid note ID.");
   }
 
   const queryClient = new QueryClient();
 
-  try {
-    // Prefetch даних на сервері для гідратації на клієнті
-    await queryClient.prefetchQuery({
-      queryKey: ["note", id],
-      queryFn: () => fetchNoteById(id),
-      staleTime: 5 * 60 * 1000, // 5 хвилин
-    });
-  } catch (error) {
-    console.error("Error prefetching note:", error);
-    notFound();
-  }
-
-  const dehydratedState = dehydrate(queryClient);
+  await queryClient.prefetchQuery({
+    queryKey: ["note", id],
+    queryFn: () => fetchNoteById(id),
+  });
 
   return (
-    <HydrationBoundary state={dehydratedState}>
+    <HydrationBoundary state={dehydrate(queryClient)}>
       <NoteDetailsClient noteId={id} />
     </HydrationBoundary>
   );

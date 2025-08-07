@@ -1,5 +1,6 @@
-import React from "react";
-import css from "./SearchBox.module.css";
+// SearchBox.tsx
+import React from 'react';
+import css from './SearchBox.module.css';
 
 interface SearchBoxProps {
   value: string;

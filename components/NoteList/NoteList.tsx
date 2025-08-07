@@ -1,41 +1,55 @@
+"use client";
+
 import type { Note } from "@/types/note";
-import css from "./NoteList.module.css";
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteNote } from "@/lib/api";
+import css from "./NoteList.module.css";
 
-interface NoteListProps {
+type NoteListProps = {
   notes: Note[];
-  onDelete?: (id: string) => void;
-  isDeleting?: boolean;
-}
+};
 
-export default function NoteList({
-  notes,
-  onDelete,
-  isDeleting = false,
-}: NoteListProps) {
+export default function NoteList({ notes }: NoteListProps) {
+  const queryClient = useQueryClient();
+
+  const { mutate: removeNote, isPending } = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
+  const handleDelete = (id: number, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (window.confirm("Delete this note? This action cannot be undone.")) {
+      removeNote(id);
+    }
+  };
+
   return (
     <ul className={css.list}>
       {notes.map((note) => (
         <li key={note.id} className={css.listItem}>
           <h3 className={css.title}>{note.title}</h3>
-          <p className={css.content}>{note.content}</p>
-
-          {/* Нижняя часть карточки: тег слева, кнопки справа */}
+          <p className={css.content}>
+            {note.content.length > 120
+              ? `${note.content.substring(0, 120)}…`
+              : note.content}
+          </p>
           <div className={css.footer}>
-            <span className={css.tag}>{note.tag}</span>
-
-            {/* КНОПКИ: строго в один ряд справа */}
-            <div style={{ display: "flex", gap: "8px" }}>
-              <Link href={`/details/${note.id}`} className={css.link}>
+            {note.tag && <span className={css.tag}>{note.tag}</span>}
+            <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
+              <Link href={`/notes/${note.id}`} className={css.link}>
                 View details
               </Link>
               <button
                 className={css.button}
-                onClick={() => onDelete?.(note.id)}
-                disabled={isDeleting}
-                aria-label={`Удалить ${note.title}`}
+                onClick={(e) => handleDelete(note.id, e)}
+                disabled={isPending}
+                aria-label={`Delete note: ${note.title}`}
               >
-                {isDeleting ? "..." : "Delete"}
+                {isPending ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

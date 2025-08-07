@@ -1,13 +1,15 @@
-import React from "react";
-import ReactPaginate from "react-paginate";
-import css from "./Pagination.module.css";
+import React from 'react';
+import ReactPaginate from 'react-paginate';
+import css from './Pagination.module.css';
 
+// Інтерфейс пропсів
 interface PaginationProps {
   pageCount: number;
   onPageChange: (selectedItem: { selected: number }) => void;
   currentPage: number;
 }
 
+// Пагінація
 const Pagination: React.FC<PaginationProps> = ({
   pageCount,
   onPageChange,
@@ -15,8 +17,8 @@ const Pagination: React.FC<PaginationProps> = ({
 }) => {
   return (
     <ReactPaginate
-      previousLabel={"← Previous"}
-      nextLabel={"Next →"}
+      previousLabel={'← Previous'}
+      nextLabel={'Next →'}
       pageCount={pageCount}
       onPageChange={onPageChange}
       forcePage={currentPage}

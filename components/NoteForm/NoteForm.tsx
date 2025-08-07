@@ -1,20 +1,12 @@
 import React from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { type NoteTag } from "@/types/note";
+import { createNote } from "@/lib/api";
+import { Note, CreateNotePayload } from "../../types/note";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
-  initialData?: {
-    title: string;
-    content: string;
-    tag: NoteTag;
-  };
-  submitButtonText?: string;
-  error?: string;
-  isLoading: boolean;
-  onCancel: () => void;
-  onSubmit: (data: { title: string; content: string; tag: NoteTag }) => void;
   onClose: () => void;
 }
 
@@ -29,25 +21,26 @@ const validationSchema = Yup.object({
     .required("Tag is required"),
 });
 
-const NoteForm: React.FC<NoteFormProps> = ({
-  initialData,
-  submitButtonText = "Create note",
-  error,
-  isLoading,
-  onCancel,
-  onSubmit,
-  onClose,
-}) => {
+const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, isError, error } = useMutation<
+    Note,
+    Error,
+    CreateNotePayload
+  >({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      onClose();
+    },
+  });
+
   return (
     <Formik
-      initialValues={
-        initialData ?? { title: "", content: "", tag: "" as NoteTag }
-      }
+      initialValues={{ title: "", content: "", tag: "" }}
       validationSchema={validationSchema}
-      onSubmit={(values) => {
-        onSubmit(values);
-        onClose();
-      }}
+      onSubmit={(values) => mutate(values as CreateNotePayload)}
     >
       {({ isSubmitting }) => (
         <Form className={css.form}>
@@ -88,23 +81,27 @@ const NoteForm: React.FC<NoteFormProps> = ({
             <ErrorMessage name="tag" component="span" className={css.error} />
           </div>
 
-          {error && <div className={css.error}>{error}</div>}
+          {isError && (
+            <div className={css.error}>
+              {error instanceof Error ? error.message : "Failed to create note"}
+            </div>
+          )}
 
           <div className={css.actions}>
             <button
               type="button"
               className={css.cancelButton}
-              onClick={onCancel}
-              disabled={isLoading}
+              onClick={onClose}
+              disabled={isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
               className={css.submitButton}
-              disabled={isSubmitting || isLoading}
+              disabled={isSubmitting || isPending}
             >
-              {submitButtonText}
+              Create note
             </button>
           </div>
         </Form>
