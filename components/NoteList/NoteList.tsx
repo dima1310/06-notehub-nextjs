@@ -20,7 +20,7 @@ export default function NoteList({ notes }: NoteListProps) {
     },
   });
 
-  const handleDelete = (id: string, e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleDelete = (id: number, e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (window.confirm("Delete this note? This action cannot be undone.")) {
       removeNote(id);
@@ -45,7 +45,7 @@ export default function NoteList({ notes }: NoteListProps) {
               </Link>
               <button
                 className={css.button}
-                onClick={(e) => handleDelete(note.id.toString(), e)}
+                onClick={(e) => handleDelete(note.id, e)}
                 disabled={isPending}
                 aria-label={`Delete note: ${note.title}`}
               >
