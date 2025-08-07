@@ -6,14 +6,15 @@ import {
 import { fetchNoteById } from "@/lib/api";
 import NoteDetailsClient from "./NoteDetailsClient";
 
+interface NoteDetailsPageProps {
+  params: { id: string };
+}
+
 export default async function NoteDetailsPage({
   params,
-}: {
-  params: { id: string };
-}) {
-  const id = params.id; // не Number, просто строка
+}: NoteDetailsPageProps) {
+  const id = params.id;
 
-  // Проверка id (если нужно)
   if (!id || typeof id !== "string") {
     throw new Error("Invalid note ID.");
   }
