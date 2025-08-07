@@ -1,26 +1,29 @@
+"use client";
+
 import type { Note } from "@/types/note";
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteNote } from "@/lib/api";
 import css from "./NoteList.module.css";
 
-interface NoteListProps {
+type NoteListProps = {
   notes: Note[];
-  onDelete?: (id: string) => void;
-  isDeleting?: boolean;
-}
+};
 
-export default function NoteList({
-  notes,
-  onDelete,
-  isDeleting = false,
-}: NoteListProps) {
-  const handleDelete = (
-    id: string,
-    title: string,
-    e: React.MouseEvent<HTMLButtonElement>
-  ) => {
+export default function NoteList({ notes }: NoteListProps) {
+  const queryClient = useQueryClient();
+
+  const { mutate: removeNote, isPending } = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
+  const handleDelete = (id: string, e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (window.confirm(`Delete "${title}"? This action cannot be undone.`)) {
-      onDelete?.(id);
+    if (window.confirm("Delete this note? This action cannot be undone.")) {
+      removeNote(id);
     }
   };
 
@@ -40,16 +43,14 @@ export default function NoteList({
               <Link href={`/notes/${note.id}`} className={css.link}>
                 View details
               </Link>
-              {onDelete && (
-                <button
-                  className={css.button}
-                  onClick={(e) => handleDelete(note.id, note.title, e)}
-                  disabled={isDeleting}
-                  aria-label={`Delete note: ${note.title}`}
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </button>
-              )}
+              <button
+                className={css.button}
+                onClick={(e) => handleDelete(note.id.toString(), e)}
+                disabled={isPending}
+                aria-label={`Delete note: ${note.title}`}
+              >
+                {isPending ? "Deleting..." : "Delete"}
+              </button>
             </div>
           </div>
         </li>

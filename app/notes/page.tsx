@@ -1,3 +1,4 @@
+// app/notes/page.tsx
 import {
   HydrationBoundary,
   QueryClient,
