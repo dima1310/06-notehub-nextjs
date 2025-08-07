@@ -6,14 +6,12 @@ import {
 import { fetchNoteById } from "@/lib/api";
 import NoteDetailsClient from "./NoteDetailsClient";
 
-interface NoteDetailsPageProps {
-  params: { id: string };
+interface Props {
+  params: Promise<{ id: string }>;
 }
 
-export default async function NoteDetailsPage({
-  params,
-}: NoteDetailsPageProps) {
-  const id = params.id;
+export default async function NoteDetailsPage(props: Props) {
+  const { id } = await props.params;
 
   if (!id || typeof id !== "string") {
     throw new Error("Invalid note ID.");
