@@ -27,6 +27,9 @@ export default function RootLayout({
             <Footer />
           </div>
         </TanStackProvider>
+
+        {/* Важно: для портала */}
+        <div id="modal-root" />
       </body>
     </html>
   );

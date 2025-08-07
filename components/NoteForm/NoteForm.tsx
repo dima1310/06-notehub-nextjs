@@ -1,8 +1,6 @@
 import React from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { createNote } from "@/lib/api";
 import { type NoteTag } from "@/types/note";
 import css from "./NoteForm.module.css";
 
@@ -31,22 +29,25 @@ const validationSchema = Yup.object({
     .required("Tag is required"),
 });
 
-const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
-  const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      onClose();
-    },
-  });
-
+const NoteForm: React.FC<NoteFormProps> = ({
+  initialData,
+  submitButtonText = "Create note",
+  error,
+  isLoading,
+  onCancel,
+  onSubmit,
+  onClose,
+}) => {
   return (
     <Formik
-      initialValues={{ title: "", content: "", tag: "" as NoteTag }}
+      initialValues={
+        initialData ?? { title: "", content: "", tag: "" as NoteTag }
+      }
       validationSchema={validationSchema}
-      onSubmit={(values) => createMutation.mutate(values)}
+      onSubmit={(values) => {
+        onSubmit(values);
+        onClose();
+      }}
     >
       {({ isSubmitting }) => (
         <Form className={css.form}>
@@ -62,7 +63,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
               id="content"
               name="content"
               as="textarea"
-              rows="8"
+              rows={8}
               className={css.textarea}
             />
             <ErrorMessage
@@ -87,20 +88,23 @@ const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
             <ErrorMessage name="tag" component="span" className={css.error} />
           </div>
 
+          {error && <div className={css.error}>{error}</div>}
+
           <div className={css.actions}>
             <button
               type="button"
               className={css.cancelButton}
-              onClick={onClose}
+              onClick={onCancel}
+              disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className={css.submitButton}
-              disabled={isSubmitting || createMutation.isPending}
+              disabled={isSubmitting || isLoading}
             >
-              Create note
+              {submitButtonText}
             </button>
           </div>
         </Form>

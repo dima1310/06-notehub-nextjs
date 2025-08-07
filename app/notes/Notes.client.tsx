@@ -1,57 +1,91 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchNotes } from "@/lib/api";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { deleteNote } from "@/lib/api";
 import type { Note } from "@/types/note";
-import { NotesResponse } from "@/lib/api";
+import type { NotesResponse } from "@/lib/api";
+import NoteList from "@/components/NoteList/NoteList";
+import Modal from "@/components/Modal/Modal";
+import NoteForm from "@/components/NoteForm/NoteForm";
+import css from "./NotesPage.module.css";
 
 interface NotesClientProps {
   initialData: NotesResponse;
 }
 
-export default function NotesClient({}: NotesClientProps) {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+export default function NotesClient({ initialData }: NotesClientProps) {
+  const [notes, setNotes] = useState<Note[]>(initialData.notes || []);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const getNotes = async () => {
-      try {
-        const response: NotesResponse = await fetchNotes(); // очікуємо NotesResponse
-        setNotes(response.notes); // витягуємо тільки масив нотаток
-      } catch (err) {
-        console.error("Failed to fetch notes:", err);
-        setError("Не вдалося завантажити нотатки");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const deleteMutation = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: (_, deletedId) => {
+      setNotes((prevNotes) =>
+        prevNotes.filter((note) => note.id !== deletedId)
+      );
+    },
+    onError: () => {
+      setError("Помилка при видаленні нотатки.");
+    },
+  });
 
-    getNotes();
-  }, []);
-
-  if (loading) {
-    return <p>Завантаження...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
-  }
+  const filteredNotes = notes.filter((note) =>
+    note.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div>
-      <h2>Список нотаток</h2>
-      {notes.length === 0 ? (
+    <div className={css.app}>
+      <div className={css.toolbar}>
+        <input
+          type="text"
+          placeholder="Пошук..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={css.searchInput}
+        />
+        <button onClick={() => setIsModalOpen(true)} className={css.button}>
+          Create note +
+        </button>
+      </div>
+
+      {filteredNotes.length === 0 ? (
         <p>Немає нотаток</p>
       ) : (
-        <ul>
-          {notes.map((note) => (
-            <li key={note.id}>
-              <h3>{note.title}</h3>
-              <p>{note.content}</p>
-            </li>
-          ))}
-        </ul>
+        <NoteList
+          notes={filteredNotes}
+          onDelete={(id) => deleteMutation.mutate(id)}
+          isDeleting={deleteMutation.isPending}
+        />
+      )}
+
+      {isModalOpen && (
+        <Modal
+          title="Створити нотатку"
+          isOpen={true}
+          onClose={() => setIsModalOpen(false)}
+        >
+          <NoteForm
+            isLoading={false}
+            onCancel={() => setIsModalOpen(false)}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={(newNote) => {
+              const tempId = Date.now().toString();
+              setNotes((prev) => [
+                ...prev,
+                {
+                  id: tempId,
+                  title: newNote.title,
+                  content: newNote.content,
+                  tag: newNote.tag,
+                  category: "General", // если есть такое поле
+                },
+              ]);
+            }}
+          />
+        </Modal>
       )}
     </div>
   );
