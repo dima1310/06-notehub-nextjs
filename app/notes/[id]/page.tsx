@@ -4,29 +4,43 @@ import {
   dehydrate,
 } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api";
+import { notFound } from "next/navigation";
 import NoteDetailsClient from "./NoteDetailsClient";
+
+// Правильная типизация для Next.js 15 App Router
+interface NoteDetailsPageProps {
+  params: Promise<{ id: string }>;
+}
 
 export default async function NoteDetailsPage({
   params,
-}: {
-  params: { id: string };
-}) {
-  const id = params.id; // не Number, просто строка
+}: NoteDetailsPageProps) {
+  // Ожидаем разрешения Promise для получения параметров
+  const { id } = await params;
 
-  // Проверка id (если нужно)
-  if (!id || typeof id !== "string") {
-    throw new Error("Invalid note ID.");
+  // Валидация ID
+  if (!id || typeof id !== "string" || id.trim() === "") {
+    notFound();
   }
 
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ["note", id],
-    queryFn: () => fetchNoteById(id),
-  });
+  try {
+    // Prefetch данных на сервере для гидратации на клиенте
+    await queryClient.prefetchQuery({
+      queryKey: ["note", id],
+      queryFn: () => fetchNoteById(id),
+      staleTime: 5 * 60 * 1000, // 5 минут
+    });
+  } catch (error) {
+    console.error("Error prefetching note:", error);
+    notFound();
+  }
+
+  const dehydratedState = dehydrate(queryClient);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
+    <HydrationBoundary state={dehydratedState}>
       <NoteDetailsClient noteId={id} />
     </HydrationBoundary>
   );
