@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getNoteById, deleteNote } from "@/lib/api";
 import type { Note } from "@/types/note";
-import css from "./NoteDetail.module.css";
+import css from "./NoteDetails.module.css";
 
 interface NoteDetailProps {
   id: string;
@@ -24,7 +24,7 @@ export default function NoteDetail({ id }: NoteDetailProps) {
   } = useQuery<Note>({
     queryKey: ["note", id],
     queryFn: () => getNoteById(id),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const { mutate: removeNote, isPending: isDeleting } = useMutation({
