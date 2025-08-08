@@ -6,9 +6,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteNote } from "@/lib/api";
 import css from "./NoteList.module.css";
 
-type NoteListProps = {
+interface NoteListProps {
   notes: Note[];
-};
+}
 
 export default function NoteList({ notes }: NoteListProps) {
   const queryClient = useQueryClient();
@@ -38,7 +38,7 @@ export default function NoteList({ notes }: NoteListProps) {
               : note.content}
           </p>
           <div className={css.footer}>
-            {note.tag && <span className={css.tag}>{note.tag}</span>}
+            <span className={css.tag}>{note.tag || "No tag"}</span>
             <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
               <Link href={`/notes/${note.id}`} className={css.link}>
                 View details
